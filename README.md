@@ -251,25 +251,3 @@ jupyter notebook notebook/olist_analysis.ipynb
 
 ---
 
-## 10. Interview Q&A — the questions this project invites
-
-**"Why filter to delivered orders?"**
-Delivered is where revenue is actually recognised; canceled/unavailable orders would inflate GMV with money never collected. 97% of orders are delivered, so it isn't attritional.
-
-**"Why sum `payment_value` instead of `price + freight`?"**
-They measure different things. `payment_value` is cash collected and reconciles to the P&L, but it can't be split across line items. `price + freight_value` attributes to a SKU, which is what category analysis needs. The two totals differ by R$2,002 (0.01%) — the gap is vouchers and rounding — which is itself a useful sanity check.
-
-**"How did you avoid double-counting revenue?"**
-Both `order_items` and `order_payments` are multi-row per order. Aggregating each to `order_id` before joining is mandatory; skipping it fans out the join and multiplies revenue. Verified by SQL↔pandas parity: R$15,422,461.77 from both paths.
-
-**"customer_id or customer_unique_id?"**
-`customer_id` is per-order. `customer_unique_id` is the person. Using the former makes every repeat buyer look like a new customer and would report a 0% repeat rate.
-
-**"Your RFM frequency is all 1s — isn't the model broken?"**
-The model is fine; the business is transactional. 97% order once, so quintiling raw frequency creates duplicate bin edges. I bucket by business logic and lead with the R×M matrix, which is where the decision value actually is.
-
-**"What's the most surprising finding?"**
-That 91.9% of orders arrive *early*, which is why CSAT looks healthy at 4.16★ — the padding hides an operational problem. The 8.8% that are late carry essentially all the 1★ reviews.
-
-**"What would you do with 6 more months of data?"**
-Cohort-controlled retention with marketing spend attached, so LTV can be computed properly rather than as a census average. That's the missing piece for any CAC/LTV decision.
